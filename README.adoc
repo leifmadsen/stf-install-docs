@@ -1,0 +1,41 @@
+= Installing the core components of Service Telemetry Framework
+
+Ensure that OpenShift version 4.x is running somewhere. For further details on how to deploy OpenShift, see the product documentation. Prior to installation of STF you need to do the following
+
+. Deploy OKD. For more information, see https://access.redhat.com/documentation/en-us/openshift_container_platform/4.3/
+. Deploy STF to the OKD environment. For more information, see Deploying STF to the OKD environment.
+. Configure OpenStack templates and deploy changes into cloud infrastructure. For more information, see Completing the Service Telemetry Framework installation.
+
+The following STF core components are managed by Operators: 
+
+* Prometheus and AlertManager
+* ElasticSearch
+* Smart Gateway
+* Apache Qpid Dispatch Router
+
+Each component has a corresponding Operator that you can use to load the various application components and objects.
+
+== Preparing your OKD environment for STF
+
+== Deploying STF to the OKD environment
+
+To deploy STF to an OKD environment, complete the following tasks:
+
+. Enable Upstream Community Catalog
+. Create a namespace
+. Subscribe to the AMQ Interconnect Operator
+. Subscribe to the Elastic Cloud on Kubernetes Operator
+. Subscribe to the Service Telemetry Operator
+. Create a ServiceTelemetry object in OKD
+
+=== Enabling the upstream Community Catalog
+
+=== Creating a namespace
+
+=== Subscribing to the AMQ Interconnect Operator
+
+=== Subscribing to the Elastic Cloud on Kubernetes Operator
+
+=== Subscribe to the Service Telemetry Operator
+
+=== Creating a ServiceTelemetry object in OKD
