@@ -43,25 +43,88 @@ The amount of resources required for running STF is variable depending on your e
 
 To deploy STF to an OKD environment, complete the following tasks:
 
-. Enable OperatorHub.io Community Catalog
 . Create a namespace
-. Subscribe to the AMQ Interconnect Operator
+. Enable OperatorHub.io Community Catalog
+. Subscribe to the AMQ Certificate Manager Operator
 . Subscribe to the Elastic Cloud on Kubernetes Operator
 . Subscribe to the Service Telemetry Operator
 . Create a ServiceTelemetry object in OKD
 
-You'll need to be logged in to your OpenShift environment as an administrator to complete the majority of the tasks.
+You'll need to be logged in to your OpenShift environment as an administrator to complete the tasks.
+
+=== Creating a namespace
+
+[source,bash]
+----
+oc new-project service-telemetry
+----
 
 === Enabling the OperatorHub.io Community Catalog
 
 Installation of ElasticSearch is done via the Elastic Cloud on Kubernetes Operator, which must be subscribed to from the OperatorHub.io catalog source.
 
-=== Creating a namespace
+If you don't plan to enable events collection from your cloud, this step can be skipped.
 
-=== Subscribing to the AMQ Interconnect Operator
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: operatorhubio-operators
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/operator-framework/upstream-community-operators:latest
+  displayName: OperatorHub.io Operators
+  publisher: OperatorHub.io
+EOF
+----
+
+=== Subscribing to the AMQ Certificate Manager Operator
+
+Install the `Subscription` for AMQ7 Certificate Manager. After creating the `Subscription` you can validate your AMQ7 Certificate Manager is available by running `oc get csv` and looking for the `amq7-cert-manager.v1.0.0` to have a phase of `Succeeded`.
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq7-cert-manager
+  namespace: openshift-operators
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: amq7-cert-manager
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: amq7-cert-manager.v1.0.0
+EOF
+----
+
 
 === Subscribing to the Elastic Cloud on Kubernetes Operator
 
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: elastic-cloud-eck
+  namespace: service-telemetry
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: elastic-cloud-eck
+  source: operatorhubio-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: elastic-cloud-eck.v1.0.1
+EOF
+----
+
 === Subscribe to the Service Telemetry Operator
+
 
 === Creating a ServiceTelemetry object in OKD
