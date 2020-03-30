@@ -44,7 +44,8 @@ The amount of resources required for running STF is variable depending on your e
 To deploy STF to an OKD environment, complete the following tasks:
 
 . Create a namespace
-. Enable OperatorHub.io Community Catalog
+. Enable OperatorHub.io Community Catalog Source
+. Enable InfraWatch Operator Source
 . Subscribe to the AMQ Certificate Manager Operator
 . Subscribe to the Elastic Cloud on Kubernetes Operator
 . Subscribe to the Service Telemetry Operator
@@ -59,11 +60,9 @@ You'll need to be logged in to your OpenShift environment as an administrator to
 oc new-project service-telemetry
 ----
 
-=== Enabling the OperatorHub.io Community Catalog
+=== Enabling the OperatorHub.io Community Catalog Source
 
 Installation of ElasticSearch is done via the Elastic Cloud on Kubernetes Operator, which must be subscribed to from the OperatorHub.io catalog source.
-
-If you don't plan to enable events collection from your cloud, this step can be skipped.
 
 [source,bash]
 ----
@@ -81,9 +80,54 @@ spec:
 EOF
 ----
 
+=== Enable InfraWatch Operator Source
+
+To install {ProjectShort} we need to install an OperatorSource that container the Service Telemetry Operator and the Smart Gateway Operator.
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  labels:
+    opsrc-provider: infrawatch
+  name: infrawatch-operators
+  namespace: openshift-marketplace
+spec:
+  authorizationToken: {}
+  displayName: InfraWatch Operators
+  endpoint: https://quay.io/cnr
+  publisher: InfraWatch
+  registryNamespace: infrawatch
+  type: appregistry
+EOF
+----
+
+Validate the creation of your OperatorSource by running `oc get operatorsources`. A successful import will result in the `MESSAGE` field returning a result of `The object has been successfully reconclied`.
+
+[source,bash]
+----
+oc get -nopenshift-marketplace operatorsource infrawatch-operators
+NAME                   TYPE          ENDPOINT              REGISTRY     DISPLAYNAME            PUBLISHER    STATUS      MESSAGE                                       AGE
+infrawatch-operators   appregistry   https://quay.io/cnr   infrawatch   InfraWatch Operators   InfraWatch   Succeeded   The object has been successfully reconciled   5m23s
+----
+
+Using `oc get packagemanifest` we can validate our Operators are available from the catalog.
+
+[source,bash]
+----
+oc get packagemanifests | grep InfraWatch
+servicetelemetry-operator                    InfraWatch Operators       7m20s
+smartgateway-operator                        InfraWatch Operators       7m20s
+----
+
 === Subscribing to the AMQ Certificate Manager Operator
 
-Install the `Subscription` for AMQ7 Certificate Manager. After creating the `Subscription` you can validate your AMQ7 Certificate Manager is available by running `oc get csv` and looking for the `amq7-cert-manager.v1.0.0` to have a phase of `Succeeded`.
+Install the `Subscription` for AMQ Certificate Manager. After creating the `Subscription` you can validate your AMQ7 Certificate Manager is available by running `oc get csv` and looking for the `amq7-cert-manager.v1.0.0` to have a phase of `Succeeded`.
+
+[NOTE]
+The AMQ Certificate Manager is installed globally for all namespaces, so the `namespace` value provided is `openshift-operators`. You may not see your `amq7-cert-manager.v1.0.0` ClusterServiceVersion in the `service-telemetry` namespace for a few minutes until the processing gets to our namespace.
 
 [source,bash]
 ----
@@ -103,17 +147,19 @@ spec:
 EOF
 ----
 
-Validate your `ClusterServiceVersion` succeeded by running:
+Validate your `ClusterServiceVersion` succeeded by running `oc get csv`.
 
 [source,bash]
 ----
-oc get -nopenshift-operators csv
+oc get --namespace openshift-operators csv
 
 NAME                       DISPLAY                                         VERSION   REPLACES   PHASE
 amq7-cert-manager.v1.0.0   Red Hat Integration - AMQ Certificate Manager   1.0.0                Succeeded
 ----
 
 === Subscribing to the Elastic Cloud on Kubernetes Operator
+
+Apply the following manifest to your {OpenShiftShort} environment to enable the Elastic Cloud on Kubernetes Operator.
 
 [source,bash]
 ----
@@ -131,6 +177,16 @@ spec:
   sourceNamespace: openshift-marketplace
   startingCSV: elastic-cloud-eck.v1.0.1
 EOF
+----
+
+Validate the `ClusterServiceVersion` for ElasticSearch Cloud on Kubernetes succeeded by running `oc get csv`.
+
+[source,bash]
+----
+oc get csv
+
+NAME                       DISPLAY                                         VERSION   REPLACES                   PHASE
+elastic-cloud-eck.v1.0.1   Elastic Cloud on Kubernetes                     1.0.1     elastic-cloud-eck.v1.0.0   Succeeded
 ----
 
 === Subscribe to the Service Telemetry Operator
