@@ -64,7 +64,7 @@ oc new-project service-telemetry
 
 Installation of ElasticSearch is done via the Elastic Cloud on Kubernetes Operator, which must be subscribed to from the OperatorHub.io catalog source.
 
-[source,bash]
+[source,yaml]
 ----
 oc apply -f - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
