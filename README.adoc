@@ -103,6 +103,15 @@ spec:
 EOF
 ----
 
+Validate your `ClusterServiceVersion` succeeded by running:
+
+[source,bash]
+----
+oc get -nopenshift-operators csv
+
+NAME                       DISPLAY                                         VERSION   REPLACES   PHASE
+amq7-cert-manager.v1.0.0   Red Hat Integration - AMQ Certificate Manager   1.0.0                Succeeded
+----
 
 === Subscribing to the Elastic Cloud on Kubernetes Operator
 
